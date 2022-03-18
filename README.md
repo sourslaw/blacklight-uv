@@ -1,24 +1,14 @@
-# README
+### Description
+- Instance of Ruby on Rails Blacklight Solr interface with Universal Viewer integration
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
 
-Things you may want to cover:
+### Installation
+- Pending . . .
 
-* Ruby version
 
-* System dependencies
+### Resources
+- [Blacklight](https://github.com/projectblacklight/blacklight)
+- [Universal Viewer](https://github.com/UniversalViewer/universalviewer)
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+### License
+- Licensed under the [MIT](https://opensource.org/licenses/mit-license.php) license.
