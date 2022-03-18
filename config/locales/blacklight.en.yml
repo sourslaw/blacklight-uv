@@ -1,0 +1,8 @@
+en:
+  blacklight:
+    application_name: 'Blacklight'
+
+    search:
+      form:
+        search:
+          placeholder: 'Insert search terms here...'
