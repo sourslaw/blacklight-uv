@@ -52,7 +52,8 @@ class CatalogController < ApplicationController
     #config.per_page = [10,20,50,100]
 
     # solr field configuration for search results/index views
-    config.index.title_field = 'title_tsim'
+    # main result field
+    config.index.title_field = 'title_ssi'
 
     #config.index.display_type_field = 'format'
     #config.index.thumbnail_field = 'thumbnail_path_ss'
@@ -71,6 +72,9 @@ class CatalogController < ApplicationController
     config.add_nav_action(:bookmark, partial: 'blacklight/nav/bookmark', if: :render_bookmarks_control?)
     config.add_nav_action(:search_history, partial: 'blacklight/nav/search_history')
 
+
+    # Show Presenter Class ("registers" the show_presenter file/class)
+    config.show.document_presenter_class = ShowPresenter
     # solr field configuration for document/show views
     #config.show.title_field = 'title_tsim'
     #config.show.display_type_field = 'format'
@@ -99,14 +103,16 @@ class CatalogController < ApplicationController
     # set :index_range to true if you want the facet pagination view to have facet prefix-based navigation
     #  (useful when user clicks "more" on a large facet and wants to navigate alphabetically across a large set of results)
     # :index_range can be an array or range of prefixes that will be used to create the navigation (note: It is case sensitive when searching values)
-
-    config.add_facet_field 'format', label: 'Format'
+    
+    # // F A C ET S //
+    # left side search facets options. 03/07:possible issue with number of facets allowed for display . . 
     config.add_facet_field 'pub_date_ssim', label: 'Publication Year', single: true
     config.add_facet_field 'subject_ssim', label: 'Topic', limit: 20, index_range: 'A'..'Z'
     config.add_facet_field 'language_ssim', label: 'Language', limit: true
     config.add_facet_field 'lc_1letter_ssim', label: 'Call Number'
     config.add_facet_field 'subject_geo_ssim', label: 'Region'
     config.add_facet_field 'subject_era_ssim', label: 'Era'
+    config.add_facet_field 'format_name_ssimv', :label => 'Format', :limit => 8, collapse: false
 
     config.add_facet_field 'example_pivot_field', label: 'Pivot Field', pivot: ['format', 'language_ssim'], collapsing: true
 
@@ -115,43 +121,74 @@ class CatalogController < ApplicationController
        :years_10 => { label: 'within 10 Years', fq: "pub_date_ssim:[#{Time.zone.now.year - 10 } TO *]" },
        :years_25 => { label: 'within 25 Years', fq: "pub_date_ssim:[#{Time.zone.now.year - 25 } TO *]" }
     }
-
-
     # Have BL send all facet field names to Solr, which has been the default
     # previously. Simply remove these lines if you'd rather use Solr request
     # handler defaults, or have no facets.
     config.add_facet_fields_to_solr_request!
 
+    # // S E A R C H RESULTS FIELDS //
     # solr fields to be displayed in the index (search results) view
     #   The ordering of the field names is the order of the display
-    config.add_index_field 'title_tsim', label: 'Title'
-    config.add_index_field 'title_vern_ssim', label: 'Title'
-    config.add_index_field 'author_tsim', label: 'Author'
-    config.add_index_field 'author_vern_ssim', label: 'Author'
-    config.add_index_field 'format', label: 'Format'
-    config.add_index_field 'language_ssim', label: 'Language'
-    config.add_index_field 'published_ssim', label: 'Published'
-    config.add_index_field 'published_vern_ssim', label: 'Published'
-    config.add_index_field 'lc_callnum_ssim', label: 'Call number'
+    config.add_index_field 'title_ssi', label: 'Title'
+    # Description
+    config.add_index_field 'description_ts', :label => 'Description'
+    # Created
+    config.add_index_field 'date_created_te_split', :label => 'Created'
+    # Contributed By
+    config.add_index_field 'contributing_organization_name_tesi', :label => 'Contributed By'
+    # Last Updated
+    config.add_index_field 'dmmodified_ssi', :label => 'Last Updated'
 
+    # // I T E M VIEW FIELDS //
     # solr fields to be displayed in the show (single result) view
-    #   The ordering of the field names is the order of the display
-    # config.add_show_field 'title_tsim', label: 'Title'
-    config.add_show_field 'title_tsim', label: 'Title', bookstore_search: true
-    # config.add_show_field 'title_tsim', label: 'Title', helper_method: :bookstore_search
-    config.add_show_field 'title_vern_ssim', label: 'Title'
-    config.add_show_field 'subtitle_tsim', label: 'Subtitle'
-    config.add_show_field 'subtitle_vern_ssim', label: 'Subtitle'
-    config.add_show_field 'author_tsim', label: 'Author'
-    config.add_show_field 'author_vern_ssim', label: 'Author'
-    config.add_show_field 'format', label: 'Format'
-    config.add_show_field 'url_fulltext_ssim', label: 'URL'
-    config.add_show_field 'url_suppl_ssim', label: 'More Information'
-    config.add_show_field 'language_ssim', label: 'Language'
-    config.add_show_field 'published_ssim', label: 'Published'
-    config.add_show_field 'published_vern_ssim', label: 'Published'
-    config.add_show_field 'lc_callnum_ssim', label: 'Call number'
-    config.add_show_field 'isbn_ssim', label: 'ISBN'
+    # Title
+    config.add_show_field 'title_ssi', label: 'Title', itemprop: 'title', type: :primary
+    # Description
+    config.add_show_field 'description_ts', label: 'Description', itemprop: 'description', type: :primary
+    # Date Created
+    config.add_show_field 'date_ssi', label: 'Date Created', itemprop: 'date_created', link_to_facet: true, type: :primary
+    # Creator
+    config.add_show_field 'creator_ssim', label: 'Creator', itemprop: 'creator', link_to_facet: true
+    # Contributor
+    config.add_show_field 'contributor_ssim', label: 'Contributor', itemprop: 'contributor', link_to_facet: true
+    # // Physical Description
+    # Item Type
+    config.add_show_field 'type_ssi', label: 'Item Type', itemprop: 'type', link_to_facet: true, type: :phys_desc
+    # Format
+    config.add_show_field 'format_name_ssimv', label: 'Format', itemprop: 'format', link_to_facet: true, type: :phys_desc
+    # Dimensions
+    config.add_show_field 'dimensions_ssi', label: 'Dimensions', itemprop: 'dimensions', type: :phys_desc
+    # // Topics
+    # Subjects
+    config.add_show_field 'subject_ssim', label: 'Subjects', itemprop: 'subject', link_to_facet: true, type: :topic
+    # Language
+    config.add_show_field 'language_ssim', label: 'Language', itemprop: 'subject', link_to_facet: true, type: :topic
+    # // Geographic Location
+    # City
+    config.add_show_field 'city_ssim', label: 'City', itemprop: 'city', link_to_facet: true, type: :geo_loc
+    # State
+    config.add_show_field 'state_ssi', label: 'State', itemprop: 'state', link_to_facet: true, type: :geo_loc
+    # Country
+    config.add_show_field 'country_ssi', label: 'Country', itemprop: 'country', link_to_facet: true, type: :geo_loc
+    # Continent
+    config.add_show_field 'continent_tesim', label: 'Continent', itemprop: 'country', link_to_facet: true, type: :geo_loc
+    # GeoNames URL
+    # // Collection Information
+    # Contributing Organization
+    config.add_show_field 'contributing_organization_ssi', label: 'Contributing Organization', itemprop: 'contributing_organization', link_to_facet: true, type: :coll_info
+    # Contact Information
+    config.add_show_field 'contact_information_ssi', label: 'Contact Information', itemprop: 'contact_information', type: :coll_info
+    # Fiscal Sponsor
+    # config.add_show_field 'fiscal_sponsor_ssi', label: 'Fiscal Sponsor', itemprop: 'fiscal_sponsor', type: :coll_info
+    # // Identifiers
+    # Local Identifier
+    config.add_show_field 'local_identifier_ssi', label: 'Local Identifier', itemprop: 'identifier', type: :identifiers
+    # DLS Identifier
+    config.add_show_field 'dls_identifier_te_split', label: 'DLS Identifier', itemprop: 'identifier', type: :identifiers
+    # Persistent URL
+    config.add_show_field 'persistent_url_ssi', label: 'Persistent URL', itemprop: 'persistent_url', type: :identifiers
+    # // Can I Use It? (copyright statement)
+    config.add_show_field 'local_rights_tesi', label: 'Copyright', itemprop: 'copyright', type: :use
 
     # "fielded" search configuration. Used by pulldown among other places.
     # For supported keys in hash, see rdoc for Blacklight::SearchFields
